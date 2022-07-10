@@ -7,11 +7,45 @@ import { increment, decrement, storedata } from "./Store/Action/index.js";
 import DummyC from "./component/dummyC";
 import jwt_decode from "jwt-decode";
 
+// =================================== FIREBASE START =======================================
+import { getDatabase, ref, set } from "firebase/database";
+import { getAuth } from "firebase/auth";
+
+// import firebase from "firebase/compat/app"; // firebase important
+// import "firebase/database";
+// import { getFirestore } from "firebase/firestore";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBfVpVN0KFOOa4dDXOjoj5qqWiD1q4NpUg",
+  authDomain: "portal-karir-a9b96.firebaseapp.com",
+  databaseURL: "https://portal-karir-a9b96-default-rtdb.firebaseio.com",
+  projectId: "portal-karir-a9b96",
+  storageBucket: "portal-karir-a9b96.appspot.com",
+  messagingSenderId: "412593896113",
+  appId: "1:412593896113:web:dfaf4b61c7ea462be00090",
+  measurementId: "G-VCSQXF4XW2",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+// =================================== FIREBASE END =======================================
+
 function App(props) {
   const [hasil, setHasil] = useState([]);
   const [judul, setJudul] = useState([]);
   const [user, setUser] = useState({});
   const [name, setName] = useState("");
+
+  const firebaseApp = app;
 
   const counter = useSelector((state) => state.counterReducer);
   const dispatch = useDispatch();
@@ -33,14 +67,13 @@ function App(props) {
     });
 
     google.accounts.id.renderButton(document.getElementById("signalDiv"), {
+      type: "icon",
       theme: "outline",
       size: "large",
     });
   }, []);
 
-  // this is method two ========================================================================
-
-  
+  // this ========================================================================
 
   useEffect(() => {
     console.log("mulai disimpan");
@@ -74,6 +107,31 @@ function App(props) {
       });
   };
 
+  function ascii_to_hexa(str) {
+    var arr1 = [];
+    for (var n = 0, l = str.length; n < l; n++) {
+      var hex = Number(str.charCodeAt(n)).toString(16);
+      arr1.push(hex);
+    }
+    return arr1.join("");
+  }
+  // =================================== FIREBASE START =======================================
+  const uploadHandler = () => {
+    console.log("handler" + app);
+    console.log(app);
+
+    const userId = ascii_to_hexa(user.email);
+
+    const database = getDatabase(app);
+    set(ref(database, "users/" + userId), {
+      username: user.name,
+      email: user.email,
+    });
+
+    console.log("finish upload to firebase");
+  };
+  // =================================== FIREBASE END =======================================
+
   return (
     <div className="App">
       <header className="App-header">
@@ -84,6 +142,7 @@ function App(props) {
         <button onClick={getAPIData}>Tarik Data</button>
         <button onClick={() => dispatch(increment())}> + </button>
         <button onClick={() => dispatch(decrement("kemana"))}> - </button>
+        <button onClick={uploadHandler}>upload to database</button>
         <DummyC />
         <div id="signalDiv"></div>
         {user && (
@@ -93,6 +152,10 @@ function App(props) {
           </div>
         )}
       </header>
+      {console.log(firebaseApp)}
+      <code>
+        <pre>{JSON.stringify(firebaseApp.options, null, 2)}</pre>
+      </code>
     </div>
   );
 }
